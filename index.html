@@ -231,6 +231,12 @@
       return urls.get(id);
     }
 
+    // A few ms of silence, played straight from a tap: iOS only lets an audio element
+    // play() after an await (fetch + decrypt) once it has played inside a user gesture.
+    const SILENCE = "data:audio/mpeg;base64,//sQxAADwAABpAAAACAAADSAAAAETEFNRTMuMTAwVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVX/+xLEKYPAAAGkAAAAIAAANIAAAARVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVX/+xDEU4PAAAGkAAAAIAAANIAAAARVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVQ==";
+    let primed = false;
+    let priming = false;
+
     const PLAY = '<path d="M7 4v16l13-8z"/>';
     const PAUSE = '<path d="M6 4h4v16H6zM14 4h4v16h-4z"/>';
 
@@ -265,7 +271,10 @@
           span.textContent = text;
           btn.appendChild(span);
         }
-        btn.addEventListener("click", () => (i === loaded ? toggle() : load(i, true)));
+        btn.addEventListener("click", () => {
+          prime();
+          i === loaded ? toggle() : load(i, true);
+        });
         li.appendChild(btn);
         list.appendChild(li);
       });
@@ -278,14 +287,33 @@
       list.querySelectorAll(".track").forEach((b, j) => b.classList.toggle("active", j === i));
     }
 
+    function prime() {
+      if (primed) return;
+      primed = priming = true;
+      audio.src = SILENCE;
+      audio.play().catch(() => {});
+    }
+
+    function setMediaSession(i) {
+      if (!("mediaSession" in navigator)) return;
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title: tracks[i].title,
+        artist: "Sinner Street",
+        album: "Inner Demons",
+        artwork: [{ src: new URL("assets/cover.jpg", location.href).href, sizes: "1200x1200", type: "image/jpeg" }],
+      });
+    }
+
     async function load(i, autoplay) {
       select(i);
       const token = ++loading;
       const url = await trackUrl(i);
       if (token !== loading) return;
       loaded = i;
+      priming = false;
       audio.src = url;
-      if (autoplay) audio.play();
+      setMediaSession(i);
+      if (autoplay) audio.play().catch(() => {});
     }
 
     async function toggle() {
@@ -306,6 +334,7 @@
 
     lockForm.addEventListener("submit", async e => {
       e.preventDefault();
+      prime();
       unlockBtn.disabled = true;
       error.textContent = "";
       try {
@@ -352,17 +381,22 @@
       playBtn.setAttribute("aria-label", playing ? "Pause" : "Play");
     }
 
-    playBtn.addEventListener("click", toggle);
-    audio.addEventListener("play", setIcon);
-    audio.addEventListener("pause", setIcon);
-    audio.addEventListener("loadedmetadata", () => (dur.textContent = fmt(audio.duration)));
+    playBtn.addEventListener("click", () => {
+      prime();
+      toggle();
+    });
+    audio.addEventListener("play", () => priming || setIcon());
+    audio.addEventListener("pause", () => priming || setIcon());
+    audio.addEventListener("loadedmetadata", () => priming || (dur.textContent = fmt(audio.duration)));
     audio.addEventListener("timeupdate", () => {
+      if (priming) return;
       const p = audio.duration ? (audio.currentTime / audio.duration) * 1000 : 0;
       seek.value = p;
       seek.style.setProperty("--p", `${p / 10}%`);
       cur.textContent = fmt(audio.currentTime);
     });
     audio.addEventListener("ended", () => {
+      if (priming) return;
       if (index < tracks.length - 1) load(index + 1, true);
       else { load(0, false); setIcon(); }
     });
@@ -370,6 +404,16 @@
       if (loaded === index && audio.duration) audio.currentTime = (seek.value / 1000) * audio.duration;
       seek.style.setProperty("--p", `${seek.value / 10}%`);
     });
+
+    // Lock screen, headphones and car controls.
+    if ("mediaSession" in navigator) {
+      const ms = navigator.mediaSession;
+      ms.setActionHandler("play", () => toggle());
+      ms.setActionHandler("pause", () => audio.pause());
+      ms.setActionHandler("previoustrack", () => load(index > 0 ? index - 1 : 0, true));
+      ms.setActionHandler("nexttrack", () => index < tracks.length - 1 && load(index + 1, true));
+      ms.setActionHandler("seekto", d => (audio.currentTime = d.seekTime));
+    }
   </script>
 </body>
 </html>

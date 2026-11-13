@@ -1,0 +1,375 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sinner Street – Inner Demons</title>
+  <meta name="description" content="Sinner Street – Inner Demons. Listen to ten tracks from the album.">
+  <meta property="og:title" content="Sinner Street – Inner Demons">
+  <meta property="og:image" content="https://pstenbumling.github.io/sinnerstreet/assets/cover.jpg">
+  <link rel="icon" href="assets/favicon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Russo+One&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0b0614;
+      --panel: rgba(22, 12, 38, 0.78);
+      --line: rgba(255, 60, 120, 0.25);
+      --text: #f3eaff;
+      --muted: #a996c4;
+      --hot: #ff2d6f;
+      --violet: #8a5cff;
+      --chrome: linear-gradient(180deg, #ffffff 0%, #dfe6ff 45%, #7d7fa8 50%, #f2f4ff 56%, #b9c2ff 100%);
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; }
+    body {
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Inter, system-ui, sans-serif;
+      overflow-x: hidden;
+    }
+    .backdrop {
+      position: fixed; inset: -40px;
+      background: url("assets/cover.jpg") center / cover no-repeat;
+      filter: blur(40px) saturate(1.3) brightness(0.35);
+      z-index: -2;
+    }
+    .backdrop::after {
+      content: ""; position: absolute; inset: 0;
+      background: radial-gradient(ellipse at center, transparent 0%, var(--bg) 85%);
+    }
+    main {
+      max-width: 1040px;
+      margin: 0 auto;
+      padding: 48px 16px 64px;
+      display: grid;
+      grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+      gap: 40px;
+      align-items: center;
+    }
+    .cover {
+      width: 100%;
+      height: auto;
+      aspect-ratio: 1;
+      border-radius: 6px;
+      box-shadow: 0 0 0 1px var(--line), 0 30px 80px rgba(255, 45, 111, 0.25), 0 0 120px rgba(138, 92, 255, 0.25);
+      display: block;
+    }
+    .eyebrow {
+      font-size: 12px; letter-spacing: 0.3em; text-transform: uppercase;
+      color: var(--hot); margin: 0 0 8px;
+    }
+    h1 {
+      font-family: "Russo One", Impact, sans-serif;
+      font-size: clamp(40px, 7vw, 64px);
+      line-height: 0.95;
+      margin: 0;
+      background: var(--chrome);
+      -webkit-background-clip: text; background-clip: text;
+      color: transparent;
+      filter: drop-shadow(0 2px 0 var(--hot)) drop-shadow(0 0 18px rgba(255, 45, 111, 0.5));
+    }
+    h2 {
+      font-family: "Russo One", Impact, sans-serif;
+      font-size: 22px; font-weight: 400;
+      margin: 12px 0 28px;
+      color: var(--hot);
+      text-shadow: 0 0 12px rgba(255, 45, 111, 0.6);
+      letter-spacing: 0.05em;
+    }
+    .player {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 20px;
+      backdrop-filter: blur(8px);
+    }
+    .now { display: flex; align-items: center; gap: 16px; }
+    .play {
+      flex: none;
+      width: 56px; height: 56px; border-radius: 50%;
+      border: none; cursor: pointer;
+      background: var(--hot); color: #fff;
+      display: grid; place-items: center;
+      box-shadow: 0 0 24px rgba(255, 45, 111, 0.6);
+      transition: transform .15s;
+    }
+    .play:hover { transform: scale(1.06); }
+    .play:focus-visible, .track:focus-visible, .seek:focus-visible { outline: 2px solid var(--violet); outline-offset: 3px; }
+    .play svg { width: 22px; height: 22px; fill: currentColor; }
+    .now-title { font-weight: 600; font-size: 17px; }
+    .now-sub { color: var(--muted); font-size: 13px; margin-top: 2px; }
+    .timeline { display: flex; align-items: center; gap: 10px; margin: 18px 0 14px; font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+    .seek {
+      flex: 1; -webkit-appearance: none; appearance: none;
+      height: 4px; border-radius: 2px; cursor: pointer;
+      background: linear-gradient(to right, var(--hot) var(--p, 0%), rgba(255,255,255,0.15) var(--p, 0%));
+    }
+    .seek::-webkit-slider-thumb { -webkit-appearance: none; width: 14px; height: 14px; border-radius: 50%; background: #fff; box-shadow: 0 0 8px var(--hot); }
+    .seek::-moz-range-thumb { width: 14px; height: 14px; border: none; border-radius: 50%; background: #fff; box-shadow: 0 0 8px var(--hot); }
+    ol { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--line); }
+    .track {
+      width: 100%;
+      display: grid; grid-template-columns: 28px 1fr auto; align-items: center; gap: 12px;
+      padding: 14px 8px;
+      background: none; border: none; border-bottom: 1px solid var(--line);
+      color: var(--text); font: inherit; text-align: left; cursor: pointer;
+    }
+    .track:hover { background: rgba(255, 45, 111, 0.08); }
+    .track .n { color: var(--muted); font-variant-numeric: tabular-nums; }
+    .track .d { color: var(--muted); font-size: 13px; font-variant-numeric: tabular-nums; }
+    .track.active .t { color: var(--hot); }
+    .track.active .n { color: var(--hot); }
+    .lock { display: grid; gap: 12px; }
+    .lock p { margin: 0; color: var(--muted); font-size: 14px; }
+    .lock-row { display: flex; gap: 10px; }
+    .lock input {
+      flex: 1; min-width: 0;
+      padding: 12px 14px; border-radius: 8px;
+      border: 1px solid var(--line); background: rgba(0, 0, 0, 0.35);
+      color: var(--text); font: inherit;
+    }
+    .lock input:focus { outline: 2px solid var(--violet); outline-offset: 1px; }
+    .lock button, .relock {
+      border: none; border-radius: 8px; cursor: pointer; font: inherit; font-weight: 600;
+    }
+    .lock button { padding: 12px 18px; background: var(--hot); color: #fff; box-shadow: 0 0 18px rgba(255, 45, 111, 0.45); }
+    .lock button:disabled { opacity: 0.6; cursor: wait; }
+    .lock .error { color: var(--hot); min-height: 1.2em; }
+    .relock { margin-top: 14px; padding: 6px 0; background: none; color: var(--muted); font-size: 12px; font-weight: 400; }
+    .relock:hover { color: var(--text); }
+    [hidden] { display: none !important; }
+    footer { text-align: center; color: var(--muted); font-size: 12px; padding: 0 16px 32px; }
+    @media (max-width: 760px) {
+      main { grid-template-columns: minmax(0, 1fr); gap: 28px; padding-top: 24px; }
+      .info { text-align: center; }
+      .player { text-align: left; }
+    }
+  </style>
+</head>
+<body>
+  <div class="backdrop" aria-hidden="true"></div>
+  <main>
+    <img class="cover" src="assets/cover.jpg" alt="Sinner Street – Inner Demons album cover" width="1200" height="1200">
+    <section class="info">
+      <p class="eyebrow">Stenbumling presents</p>
+      <h1>Sinner<br>Street</h1>
+      <h2>Inner Demons</h2>
+
+      <div class="player">
+        <form class="lock" id="lock">
+          <p>Private preview. Enter the password to listen.</p>
+          <div class="lock-row">
+            <input id="password" type="password" autocomplete="current-password" placeholder="Password" aria-label="Password" required>
+            <button id="unlock" type="submit">Unlock</button>
+          </div>
+          <div class="error" id="error" role="alert"></div>
+        </form>
+
+        <div id="unlocked" hidden>
+        <div class="now">
+          <button class="play" id="play" aria-label="Play">
+            <svg id="icon" viewBox="0 0 24 24"><path d="M7 4v16l13-8z"/></svg>
+          </button>
+          <div>
+            <div class="now-title" id="nowTitle"></div>
+            <div class="now-sub">Sinner Street</div>
+          </div>
+        </div>
+        <div class="timeline">
+          <span id="cur">0:00</span>
+          <input class="seek" id="seek" type="range" min="0" max="1000" value="0" aria-label="Seek">
+          <span id="dur">0:00</span>
+        </div>
+        <ol id="list"></ol>
+        <button class="relock" id="relock" type="button">Lock</button>
+        </div>
+      </div>
+    </section>
+  </main>
+  <footer>© Sinner Street / Stenbumling · Patric Sten™</footer>
+
+  <audio id="audio" preload="metadata"></audio>
+
+  <script>
+    // Tracks are AES-GCM encrypted by tools/encrypt.mjs; see that file for the format.
+    const VAULT = "assets/vault/";
+    const KEY_STORE = "sinnerstreet-key";
+    let tracks = [];
+    let key = null;
+    const urls = new Map();
+
+    const b64 = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
+    const toB64 = buf => btoa(String.fromCharCode(...new Uint8Array(buf)));
+
+    async function open(bytes) {
+      return crypto.subtle.decrypt({ name: "AES-GCM", iv: bytes.slice(0, 12) }, key, bytes.slice(12));
+    }
+
+    async function deriveKey(password, vault) {
+      const base = await crypto.subtle.importKey("raw", new TextEncoder().encode(password), "PBKDF2", false, ["deriveKey"]);
+      return crypto.subtle.deriveKey(
+        { name: "PBKDF2", hash: "SHA-256", salt: b64(vault.salt), iterations: vault.iterations },
+        base, { name: "AES-GCM", length: 256 }, true, ["decrypt"],
+      );
+    }
+
+    async function readManifest(vault) {
+      tracks = JSON.parse(new TextDecoder().decode(await open(b64(vault.manifest))));
+    }
+
+    async function trackUrl(i) {
+      const id = tracks[i].id;
+      if (!urls.has(id)) {
+        const res = await fetch(`${VAULT}${id}.bin`);
+        const mp3 = await open(new Uint8Array(await res.arrayBuffer()));
+        urls.set(id, URL.createObjectURL(new Blob([mp3], { type: "audio/mpeg" })));
+      }
+      return urls.get(id);
+    }
+
+    const PLAY = '<path d="M7 4v16l13-8z"/>';
+    const PAUSE = '<path d="M6 4h4v16H6zM14 4h4v16h-4z"/>';
+
+    const audio = document.getElementById("audio");
+    const playBtn = document.getElementById("play");
+    const icon = document.getElementById("icon");
+    const seek = document.getElementById("seek");
+    const cur = document.getElementById("cur");
+    const dur = document.getElementById("dur");
+    const nowTitle = document.getElementById("nowTitle");
+    const list = document.getElementById("list");
+    const lockForm = document.getElementById("lock");
+    const passwordInput = document.getElementById("password");
+    const unlockBtn = document.getElementById("unlock");
+    const error = document.getElementById("error");
+    const unlocked = document.getElementById("unlocked");
+    let index = 0;
+    let loaded = -1;
+    let loading = 0;
+
+    const fmt = s => isFinite(s) ? `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, "0")}` : "0:00";
+
+    function renderList() {
+      list.replaceChildren();
+      tracks.forEach((t, i) => {
+        const li = document.createElement("li");
+        const btn = document.createElement("button");
+        btn.className = "track";
+        for (const [cls, text] of [["n", i + 1], ["t", t.title], ["d", t.dur]]) {
+          const span = document.createElement("span");
+          span.className = cls;
+          span.textContent = text;
+          btn.appendChild(span);
+        }
+        btn.addEventListener("click", () => (i === loaded ? toggle() : load(i, true)));
+        li.appendChild(btn);
+        list.appendChild(li);
+      });
+    }
+
+    function select(i) {
+      index = i;
+      nowTitle.textContent = tracks[i].title;
+      dur.textContent = tracks[i].dur;
+      list.querySelectorAll(".track").forEach((b, j) => b.classList.toggle("active", j === i));
+    }
+
+    async function load(i, autoplay) {
+      select(i);
+      const token = ++loading;
+      const url = await trackUrl(i);
+      if (token !== loading) return;
+      loaded = i;
+      audio.src = url;
+      if (autoplay) audio.play();
+    }
+
+    async function toggle() {
+      if (loaded !== index) return load(index, true);
+      audio.paused ? audio.play() : audio.pause();
+    }
+
+    async function fetchVault() {
+      return (await fetch(`${VAULT}vault.json`, { cache: "no-cache" })).json();
+    }
+
+    function showPlayer() {
+      renderList();
+      select(0);
+      lockForm.hidden = true;
+      unlocked.hidden = false;
+    }
+
+    lockForm.addEventListener("submit", async e => {
+      e.preventDefault();
+      unlockBtn.disabled = true;
+      error.textContent = "";
+      try {
+        const vault = await fetchVault();
+        key = await deriveKey(passwordInput.value, vault);
+        await readManifest(vault);
+      } catch {
+        key = null;
+        error.textContent = "Wrong password.";
+        unlockBtn.disabled = false;
+        passwordInput.select();
+        return;
+      }
+      try { sessionStorage.setItem(KEY_STORE, toB64(await crypto.subtle.exportKey("raw", key))); } catch {}
+      passwordInput.value = "";
+      unlockBtn.disabled = false;
+      showPlayer();
+    });
+
+    document.getElementById("relock").addEventListener("click", () => {
+      try { sessionStorage.removeItem(KEY_STORE); } catch {}
+      location.reload();
+    });
+
+    // Stay unlocked across reloads in the same tab.
+    (async () => {
+      let stored = null;
+      try { stored = sessionStorage.getItem(KEY_STORE); } catch {}
+      if (!stored) return passwordInput.focus();
+      try {
+        key = await crypto.subtle.importKey("raw", b64(stored), "AES-GCM", false, ["decrypt"]);
+        await readManifest(await fetchVault());
+        showPlayer();
+      } catch {
+        key = null;
+        try { sessionStorage.removeItem(KEY_STORE); } catch {}
+        passwordInput.focus();
+      }
+    })();
+
+    function setIcon() {
+      const playing = !audio.paused;
+      icon.innerHTML = playing ? PAUSE : PLAY;
+      playBtn.setAttribute("aria-label", playing ? "Pause" : "Play");
+    }
+
+    playBtn.addEventListener("click", toggle);
+    audio.addEventListener("play", setIcon);
+    audio.addEventListener("pause", setIcon);
+    audio.addEventListener("loadedmetadata", () => (dur.textContent = fmt(audio.duration)));
+    audio.addEventListener("timeupdate", () => {
+      const p = audio.duration ? (audio.currentTime / audio.duration) * 1000 : 0;
+      seek.value = p;
+      seek.style.setProperty("--p", `${p / 10}%`);
+      cur.textContent = fmt(audio.currentTime);
+    });
+    audio.addEventListener("ended", () => {
+      if (index < tracks.length - 1) load(index + 1, true);
+      else { load(0, false); setIcon(); }
+    });
+    seek.addEventListener("input", () => {
+      if (loaded === index && audio.duration) audio.currentTime = (seek.value / 1000) * audio.duration;
+      seek.style.setProperty("--p", `${seek.value / 10}%`);
+    });
+  </script>
+</body>
+</html>
